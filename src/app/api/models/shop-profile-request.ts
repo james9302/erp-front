@@ -15,6 +15,7 @@ export interface ShopProfileRequest {
   ownerName?: string;
   photoUrl?: string;
   subChannel?: string;
+  surveyRequired?: boolean;
   suspended?: boolean;
   suspendedReason?: string;
   tradeClass?: string;

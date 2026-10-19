@@ -31,8 +31,8 @@ import { BundleView, NetworkResponse, StockOnHandRow, StockSummary } from '../..
   <mat-tab-group>
     <mat-tab label="Warehouse stock">
       <div class="toolbar">
-        <mat-form-field appearance="outline"><mat-label>Network</mat-label><mat-select [(ngModel)]="network" (valueChange)="state.refresh()"><mat-option [value]="''">All</mat-option>@for (n of nets(); track n.code) { <mat-option [value]="n.code">{{ n.name }}</mat-option> }</mat-select></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="state.refresh()"><mat-option [value]="''">All</mat-option>@for (s of ['IN_WAREHOUSE','PACKED','RETURNED_CHECK','QUARANTINE','WITH_REP','WITH_AGENT','WITH_SHOP','SOLD']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Network</mat-label><mat-select [ngModel]="network" (ngModelChange)="network = $event; state.refresh()"><mat-option [value]="''">All</mat-option>@for (n of nets(); track n.code) { <mat-option [value]="n.code">{{ n.name }}</mat-option> }</mat-select></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; state.refresh()"><mat-option [value]="''">All</mat-option>@for (s of ['IN_WAREHOUSE','PACKED','RETURNED_CHECK','QUARANTINE','WITH_REP','WITH_AGENT','WITH_SHOP','SOLD']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
         <mat-checkbox [(ngModel)]="warehouseOnly" (change)="state.refresh()">Warehouse only</mat-checkbox>
       </div>
       <app-table [cols]="cols" [rows]="rows()" [server]="state" />

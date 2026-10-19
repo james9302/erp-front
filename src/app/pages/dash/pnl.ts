@@ -14,7 +14,7 @@ import { PnlView } from '../../api/models';
   standalone: true, imports: [UI, PageHeader, ChartComponent],
   template: `
   <app-page title="P&L by month" subtitle="Supplier revenue less payouts and SIM cost, from the earnings runs. Each month is what the network's statement paid and what we paid out for it.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Company</mat-label><mat-select [(ngModel)]="companyId" (valueChange)="load()">@for (c of companies.companies(); track c.id) { <mat-option [value]="c.id">{{ c.code }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Company</mat-label><mat-select [ngModel]="companyId" (ngModelChange)="companyId = $event; load()">@for (c of companies.companies(); track c.id) { <mat-option [value]="c.id">{{ c.code }}</mat-option> }</mat-select></mat-form-field>
     <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:120px"><mat-label>From</mat-label><input matInput [(ngModel)]="from" placeholder="yyyy-MM" (change)="load()"></mat-form-field>
     <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:120px"><mat-label>To</mat-label><input matInput [(ngModel)]="to" placeholder="yyyy-MM" (change)="load()"></mat-form-field>
   </app-page>

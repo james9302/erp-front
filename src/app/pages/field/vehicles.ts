@@ -22,9 +22,9 @@ const STATUSES = ['ACTIVE', 'WORKSHOP', 'RETIRED'];
     @if (auth.has('vehicle.manage')) { <button mat-flat-button (click)="create()"><mat-icon>add</mat-icon> New vehicle</button> }
   </app-page>
   <div class="toolbar">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of statuses; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of statuses; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
   </div>
-  <app-table [cols]="cols" [rows]="rows()" [server]="state" (pick)="open($event)" empty="No vehicles yet. Add one, or import the register from the old ERP (Fleet import)." />
+  <app-table [cols]="cols" [rows]="rows()" [server]="state" (pick)="open($event)" empty="No vehicles yet. Add one." />
   <app-drawer [open]="!!sel()" (closed)="sel.set(null)" [title]="sel()?.regNo || ''" [subtitle]="(sel()?.make || '') + ' ' + (sel()?.model || '')" width="min(760px, 96vw)">
     @if (sel(); as v) {
       <div>
@@ -34,7 +34,7 @@ const STATUSES = ['ACTIVE', 'WORKSHOP', 'RETIRED'];
           <span>Fuel / tank</span><span>{{ v.fuelType || '—' }} · {{ v.tankLitres || '?' }} l · expected {{ v.expectedLPer100km || '?' }} l/100 km</span>
           <span>Company</span><span>{{ v.companyCode || '—' }} · monthly charge {{ v.monthlyCharge | rand:'—' }}</span>
           <span>Last reading</span><span>{{ v.lastReading | qty }} km</span>
-          <span>Tracker</span><span>{{ v.trackerDevice || '—' }} {{ v.legacyId ? '· old ERP ' + v.legacyId : '' }}</span>
+          <span>Tracker</span><span>{{ v.trackerDevice || '—' }} </span>
           @if (v.notes) { <span>Notes</span><span>{{ v.notes }}</span> }
         </div>
         <div class="row" style="align-items:center">

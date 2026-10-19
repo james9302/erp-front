@@ -55,16 +55,16 @@ export class CompaniesPage {
   constructor() { this.load(); this.api.call(vatRates).subscribe(v => this.vat.set(v)); }
   load(): void { this.api.call(companies, { size: 500 }).subscribe(p => { this.list.set(p.items ?? []); this.companies.load(); }); }
   async newCompany(): Promise<void> {
-    const v = await this.dialogs.form({ title: 'New company', fields: COMPANY_FIELDS, initial: { active: true }, submit: 'Create' }); if (!v) return;
-    this.api.call(createCompany, { body: v }).subscribe({ next: () => { this.toast.ok('Company created'); this.load(); }, error: e => this.toast.error(e) });
+    const v = await this.dialogs.form({ title: 'New company', subtitle: 'The address, with a place search and map pin, is asked next.', fields: COMPANY_FIELDS.filter(f => f.key !== 'address'), initial: { active: true }, submit: 'Create' }); if (!v) return;
+    this.api.call(createCompany, { body: v }).subscribe({ next: c => { this.toast.ok('Company created'); this.load(); this.companyAddress(c); }, error: e => this.toast.error(e) });
   }
   async edit(c: CompanyResponse): Promise<void> {
     const v = await this.dialogs.form({ title: 'Edit ' + c.code, fields: COMPANY_FIELDS, initial: c }); if (!v) return;
     this.api.call(updateCompany, { id: c.id!, body: v }).subscribe({ next: () => { this.toast.ok('Saved'); this.load(); }, error: e => this.toast.error(e) });
   }
   async newWarehouse(c: CompanyResponse): Promise<void> {
-    const v = await this.dialogs.form({ title: 'New warehouse for ' + c.code, fields: [{ key: 'code', label: 'Code', required: true }, { key: 'name', label: 'Name', required: true }, { key: 'address', label: 'Address', wide: true }], submit: 'Create' }); if (!v) return;
-    this.api.call(createWarehouse, { body: { ...v, companyId: c.id!, active: true } }).subscribe({ next: () => { this.toast.ok('Warehouse added'); this.load(); }, error: e => this.toast.error(e) });
+    const v = await this.dialogs.form({ title: 'New warehouse for ' + c.code, subtitle: 'The address, with a place search and map pin, is asked next: the pin is where route plans start.', fields: [{ key: 'code', label: 'Code', required: true }, { key: 'name', label: 'Name', required: true }], submit: 'Create' }); if (!v) return;
+    this.api.call(createWarehouse, { body: { ...v, companyId: c.id!, active: true } }).subscribe({ next: w => { this.toast.ok('Warehouse added'); this.load(); this.warehouseAddress(c, w); }, error: e => this.toast.error(e) });
   }
   async companyAddress(c: CompanyResponse): Promise<void> {
     const a = await this.places.edit({ title: 'Address of ' + c.code + ' · ' + c.name, ownerKind: 'COMPANY', ownerId: c.id!, initial: c.place, readOnly: !this.auth.has('company.edit') }); if (a) this.load();

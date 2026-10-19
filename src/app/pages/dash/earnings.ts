@@ -17,7 +17,7 @@ import { ExceptionView, PartyEarningsView, RunView } from '../../api/models';
   <app-page title="Earnings & exceptions" subtitle="Who earned what in a month across the companies, and the events the engine could not place." />
   <div class="toolbar">
     <mat-form-field appearance="outline"><mat-label>Month</mat-label><input matInput [(ngModel)]="period" placeholder="yyyy-MM" (change)="load()"></mat-form-field>
-    <mat-form-field appearance="outline"><mat-label>Kind</mat-label><mat-select [(ngModel)]="kind" (valueChange)="load()"><mat-option [value]="''">All</mat-option><mat-option value="REP">REP</mat-option><mat-option value="FIELD_AGENT">FIELD_AGENT</mat-option><mat-option value="SHOP_AGENT">SHOP_AGENT</mat-option></mat-select></mat-form-field>
+    <mat-form-field appearance="outline"><mat-label>Kind</mat-label><mat-select [ngModel]="kind" (ngModelChange)="kind = $event; load()"><mat-option [value]="''">All</mat-option><mat-option value="REP">REP</mat-option><mat-option value="FIELD_AGENT">FIELD_AGENT</mat-option><mat-option value="SHOP_AGENT">SHOP_AGENT</mat-option></mat-select></mat-form-field>
   </div>
   <div class="panel">
     <h2>Top earners</h2>

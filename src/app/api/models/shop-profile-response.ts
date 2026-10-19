@@ -18,6 +18,7 @@ export interface ShopProfileResponse {
   photoUrl?: string;
   streetId?: number;
   subChannel?: string;
+  surveyRequired?: boolean;
   suspended?: boolean;
   suspendedReason?: string;
   tradeClass?: string;

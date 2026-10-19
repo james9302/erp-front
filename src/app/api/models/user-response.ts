@@ -5,9 +5,12 @@ import { GrantResponse } from '../models/grant-response';
 export interface UserResponse {
   email?: string;
   id?: number;
+  invitationToken?: string;
   lastLoginAt?: string;
+  legacyId?: number;
   mfa?: boolean;
   mobile?: string;
+  name?: string;
   partyId?: number;
   roles?: Array<GrantResponse>;
   status?: string;

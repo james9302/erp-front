@@ -27,7 +27,7 @@ import { AccountRunView, StatementRow } from '../../api/models';
       <div class="kpi"><div class="label">Earnings</div><div class="value">{{ run.earningsTotal | rand }}</div></div>
       <div class="kpi"><div class="label">Pay</div><div class="value">{{ run.payTotal | rand }}</div></div>
     </div>
-    <div class="toolbar"><mat-form-field appearance="outline"><mat-label>Flag</mat-label><mat-select [(ngModel)]="flag" (valueChange)="state.refresh()"><mat-option [value]="''">All</mat-option>@for (f of ['OVER_LIMIT','SHORTFALL','LOAN_DUE','PAY_CHANGED','LOAN_ADVANCE','NO_BANK','IN_CREDIT']; track f) { <mat-option [value]="f">{{ f }}</mat-option> }</mat-select></mat-form-field></div>
+    <div class="toolbar"><mat-form-field appearance="outline"><mat-label>Flag</mat-label><mat-select [ngModel]="flag" (ngModelChange)="flag = $event; state.refresh()"><mat-option [value]="''">All</mat-option>@for (f of ['OVER_LIMIT','SHORTFALL','LOAN_DUE','PAY_CHANGED','LOAN_ADVANCE','NO_BANK','IN_CREDIT']; track f) { <mat-option [value]="f">{{ f }}</mat-option> }</mat-select></mat-form-field></div>
     <app-table [cols]="cols" [rows]="rows()" [server]="state" (pick)="router.navigate(['/statements', $event.id])" />
   }`,
 })

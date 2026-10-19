@@ -16,6 +16,8 @@ export const routes: Routes = [
       { path: 'terms', data: p('term.view'), loadComponent: () => import('./pages/setup/terms').then(m => m.TermsPage) },
       { path: 'deals', data: p('deal.view'), loadComponent: () => import('./pages/setup/deals').then(m => m.DealsPage) },
       { path: 'parties', data: p('party.view'), loadComponent: () => import('./pages/setup/parties').then(m => m.PartiesPage) },
+      { path: 'imports', data: p('imports.run'), loadComponent: () => import('./pages/setup/imports').then(m => m.ImportsPage) },
+      { path: 'survey-types', data: p(['survey.manage', 'survey.review']), loadComponent: () => import('./pages/setup/survey-types').then(m => m.SurveyTypesPage) },
       // stock
       { path: 'purchase-orders', data: p('po.view'), loadComponent: () => import('./pages/stock/purchase-orders').then(m => m.PurchaseOrdersPage) },
       { path: 'purchase-orders/:id', data: p('po.view'), loadComponent: () => import('./pages/stock/purchase-order').then(m => m.PurchaseOrderPage) },
@@ -42,6 +44,8 @@ export const routes: Routes = [
       { path: 'streets', data: p(['party.view', 'shop.visit']), loadComponent: () => import('./pages/field/streets').then(m => m.StreetsPage) },
       { path: 'vehicles', data: p(['vehicle.manage', 'fuel.approve', 'route.view']), loadComponent: () => import('./pages/field/vehicles').then(m => m.VehiclesPage) },
       { path: 'fuel-claims', data: p(['fuel.approve', 'vehicle.manage']), loadComponent: () => import('./pages/field/fuel-claims').then(m => m.FuelClaimsPage) },
+      { path: 'surveys', data: p(['survey.review', 'survey.manage']), loadComponent: () => import('./pages/field/surveys').then(m => m.SurveysPage) },
+      { path: 'survey-dashboards', data: p(['survey.review', 'survey.manage']), loadComponent: () => import('./pages/field/survey-dashboards').then(m => m.SurveyDashboardsPage) },
       // dashboards
       { path: 'dash/coverage', data: p(['party.view', 'route.view']), loadComponent: () => import('./pages/dash/coverage').then(m => m.CoverageDashPage) },
       { path: 'dash/pnl', data: p('earnings.view'), loadComponent: () => import('./pages/dash/pnl').then(m => m.PnlDashPage) },

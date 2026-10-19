@@ -4,15 +4,18 @@ import { PageHeader } from '../../shared/page-header';
 import { ChartComponent, PALETTE } from '../../shared/chart';
 import { Col } from '../../shared/table';
 import { ApiClient } from '../../core/api';
-import { fieldActivity, fieldCoverage, fieldCoverageWeeks } from '../../api/functions';
-import { ActivityRow, AreaCoverageRow, CoverageWeek } from '../../api/models';
+import { AuthService } from '../../core/auth.service';
+import { yyyyMm } from '../../core/pipes';
+import { fieldActivity, fieldCoverage, fieldCoverageWeeks, surveyCoverage } from '../../api/functions';
+import { ActivityRow, AreaCoverageRow, CoverageWeek, SurveyCoverageRow } from '../../api/models';
+import { familyLabel } from '../setup/survey-types';
 
 /** Coverage: which areas the field team reaches, week by week, and what each rep and agent did. Drill province > district > suburb. */
 @Component({
   standalone: true, imports: [UI, PageHeader, ChartComponent],
   template: `
   <app-page title="Field coverage" subtitle="Shops reached in the window against shops on record, by area and by week. A shop is due when nobody visited it within the due window; a visit is a check-in or a hand-over.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:120px"><mat-label>Weeks</mat-label><mat-select [(ngModel)]="weeks" (valueChange)="reload()">@for (w of [4, 8, 12, 26, 52]; track w) { <mat-option [value]="w">{{ w }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:120px"><mat-label>Weeks</mat-label><mat-select [ngModel]="weeks" (ngModelChange)="weeks = $event; reload()">@for (w of [4, 8, 12, 26, 52]; track w) { <mat-option [value]="w">{{ w }}</mat-option> }</mat-select></mat-form-field>
   </app-page>
   @if (total(); as t) {
     <div class="cards">
@@ -35,12 +38,30 @@ import { ActivityRow, AreaCoverageRow, CoverageWeek } from '../../api/models';
   </div>
   <div class="panel"><h2>Field activity · last {{ actWeeks }} weeks</h2>
     <app-table [cols]="actCols" [rows]="activity()" [pageSize]="15" [clickable]="false" />
-  </div>`,
-  styles: [`.crumbs { display: flex; align-items: center; gap: 2px; font-size: 12px; margin-bottom: 6px; } .crumbs a { cursor: pointer; } .crumbs mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--ink-3); }`],
+  </div>
+  @if (auth.hasAny('survey.review', 'survey.manage')) {
+    <div class="panel"><h2 class="row">Surveys this month <span class="muted" style="font-weight:400">· eligible shops against shops surveyed in the month's cycle; rejected surveys do not count as done</span>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:130px;margin-left:auto"><mat-label>Month</mat-label><input matInput [(ngModel)]="month" placeholder="yyyy-MM" (change)="loadSurveys()"></mat-form-field></h2>
+      @for (g of surveyGroups(); track g.family) {
+        <h3 class="fam"><span class="tag">{{ familyLabel(g.family) }}</span> <span class="muted">{{ g.rows.length }} type(s) · {{ g.done }} shop(s) surveyed · {{ g.surveys }} survey(s)</span></h3>
+        <app-table [cols]="surveyCols" [rows]="g.rows" [pageSize]="15" [clickable]="false" />
+      }
+      @if (!surveys().length) { <div class="empty">No active survey types.</div> }
+      <p class="muted" style="margin:6px 0 0">The per-family dashboards (mystery by fiscal week, red audits by shop category) are under Field → Survey dashboards.</p>
+    </div>
+  }`,
+  styles: [`.row { display: flex; align-items: center; gap: 8px; } .fam { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 10px 0 4px; } .crumbs { display: flex; align-items: center; gap: 2px; font-size: 12px; margin-bottom: 6px; } .crumbs a { cursor: pointer; } .crumbs mat-icon { font-size: 16px; width: 16px; height: 16px; color: var(--ink-3); }`],
 })
 export class CoverageDashPage {
-  private api = inject(ApiClient);
-  weeks = 12; actWeeks = 4;
+  private api = inject(ApiClient); auth = inject(AuthService);
+  weeks = 12; actWeeks = 4; month = yyyyMm();
+  surveys = signal<SurveyCoverageRow[]>([]); familyLabel = familyLabel;
+  surveyGroups = computed(() => {
+    const m = new Map<string, SurveyCoverageRow[]>();
+    for (const r of this.surveys()) { const k = r.family ?? ''; if (!m.has(k)) m.set(k, []); m.get(k)!.push(r); }
+    return [...m.entries()].map(([family, rows]) => ({ family, rows, done: rows.reduce((n, r) => n + (r.doneShops ?? 0), 0), surveys: rows.reduce((n, r) => n + (r.surveys ?? 0), 0) }));
+  });
+  surveyCols: Col[] = [{ key: 'name', label: 'Survey type' }, { key: 'cycleKey', label: 'Cycle', type: 'tag' }, { key: 'eligibleShops', label: 'Eligible', type: 'qty' }, { key: 'doneShops', label: 'Done', type: 'qty' }, { key: 'coveredPct', label: '% covered', type: 'pct' }, { key: 'surveys', label: 'Surveys', type: 'qty' }, { key: 'reviewed', label: 'Reviewed', type: 'qty' }, { key: 'rejected', label: 'Rejected', type: 'qty' }, { key: 'avgScorePct', label: 'Avg score %', type: 'pct' }];
   rows = signal<AreaCoverageRow[]>([]); weeksData = signal<CoverageWeek[]>([]); activity = signal<ActivityRow[]>([]);
   crumbs = signal<{ id: number | null; name: string }[]>([{ id: null, name: 'South Africa' }]);
   total = signal<AreaCoverageRow | null>(null);
@@ -48,7 +69,8 @@ export class CoverageDashPage {
   actCols: Col[] = [{ key: 'name', label: 'Rep / agent' }, { key: 'kind', label: 'Kind', type: 'tag' }, { key: 'visits', label: 'Visits', type: 'qty' }, { key: 'shopsVisited', label: 'Shops', type: 'qty' }, { key: 'checkins', label: 'Check-ins', type: 'qty' }, { key: 'handovers', label: 'Hand-overs', type: 'qty' }, { key: 'stopsVisited', label: 'Stops done', type: 'qty' }, { key: 'stopsPlanned', label: 'Planned', type: 'qty' }, { key: 'stopsSkipped', label: 'Skipped', type: 'qty' }, { key: 'routeDays', label: 'Days', type: 'qty' }, { key: 'kmPlanned', label: 'km', type: 'qty' }, { key: 'lastVisitAt', label: 'Last visit', type: 'datetime' }];
   weekLabels = signal<string[]>([]); weekSets = signal<any[]>([]); areaLabels = signal<string[]>([]); areaSets = signal<any[]>([]);
 
-  constructor() { this.reload(); this.api.call(fieldActivity, { weeks: this.actWeeks }).subscribe(a => this.activity.set(a)); }
+  constructor() { this.reload(); this.api.call(fieldActivity, { weeks: this.actWeeks }).subscribe(a => this.activity.set(a)); this.loadSurveys(); }
+  loadSurveys(): void { if (!this.auth.hasAny('survey.review', 'survey.manage')) return; this.api.call(surveyCoverage, { month: this.month }).subscribe(r => this.surveys.set(r)); }
   crumbName(): string { const c = this.crumbs(); return c.length > 1 ? c[c.length - 1].name : ''; }
   areaRows = computed(() => this.rows().filter(r => r.kind !== 'TOTAL'));
   reload(): void {

@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, finalize, shareReplay, tap } from 'rxjs';
 import { ApiClient } from './api';
-import { login, logout, refresh } from '../api/functions';
+import { bootstrap, changePassword, login, logout, refresh } from '../api/functions';
 import { MeResponse, TokenResponse } from '../api/models';
 
 const ACCESS = 'sl.access';
@@ -40,6 +40,16 @@ export class AuthService {
       );
     }
     return this.refreshing;
+  }
+
+  /** The signed-in user changes their own password; the server signs out their other sessions and returns fresh tokens. */
+  changePassword(currentPassword: string, newPassword: string): Observable<TokenResponse> {
+    return this.api.call(changePassword, { body: { currentPassword, newPassword } }).pipe(tap(t => this.store(t)));
+  }
+
+  /** First sign-in of an invited (imported) user: the one-time token from the Users page plus the password they choose. */
+  bootstrap(token: string, password: string): Observable<TokenResponse> {
+    return this.api.call(bootstrap, { body: { token, password } }).pipe(tap(t => this.store(t)));
   }
 
   logout(): void {

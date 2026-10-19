@@ -16,7 +16,7 @@ import { GrResponse } from '../../api/models';
   standalone: true, imports: [UI, PageHeader],
   template: `
   <app-page title="Receiving" subtitle="Goods receipts: scan box ranges or import the supplier's ORDER file, record variances, count, then confirm into stock. Open one from an approved purchase order, or without an order here.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of ['OPEN','COUNTED','CONFIRMED','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of ['OPEN','COUNTED','CONFIRMED','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
     @if (auth.has('gr.receive')) { <button mat-flat-button (click)="openGr()"><mat-icon>add</mat-icon> Receipt without order</button> }
   </app-page>
   <app-table [cols]="cols" [rows]="rows()" [server]="state" (pick)="router.navigate(['/receiving', $event.id])" />`,

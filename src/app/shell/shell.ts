@@ -12,6 +12,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { AuthService } from '../core/auth.service';
 import { CompanyService } from '../core/company.service';
 import { LoadingState } from '../core/loading';
+import { Dialogs } from '../shared/dialogs';
+import { Toast } from '../core/problem';
 
 interface NavItem { label: string; link: string; icon: string; perms: string[]; }
 interface NavGroup { title: string; items: NavItem[]; }
@@ -23,6 +25,8 @@ const NAV: NavGroup[] = [
     { label: 'Supplier terms', link: '/terms', icon: 'request_quote', perms: ['term.view'] },
     { label: 'Deals & rules', link: '/deals', icon: 'handshake', perms: ['deal.view'] },
     { label: 'Parties', link: '/parties', icon: 'account_tree', perms: ['party.view'] },
+    { label: 'Imports from old ERP', link: '/imports', icon: 'upload_file', perms: ['imports.run'] },
+    { label: 'Survey types', link: '/survey-types', icon: 'fact_check', perms: ['survey.manage', 'survey.review'] },
   ]},
   { title: 'Stock', items: [
     { label: 'Purchase orders', link: '/purchase-orders', icon: 'shopping_cart', perms: ['po.view'] },
@@ -44,6 +48,8 @@ const NAV: NavGroup[] = [
     { label: 'Route plans', link: '/route-plans', icon: 'alt_route', perms: ['route.view', 'route.plan'] },
     { label: 'Vehicles', link: '/vehicles', icon: 'local_shipping', perms: ['vehicle.manage', 'fuel.approve', 'route.view'] },
     { label: 'Fuel claims', link: '/fuel-claims', icon: 'local_gas_station', perms: ['fuel.approve', 'vehicle.manage'] },
+    { label: 'Surveys', link: '/surveys', icon: 'checklist', perms: ['survey.review', 'survey.manage'] },
+    { label: 'Survey dashboards', link: '/survey-dashboards', icon: 'insights', perms: ['survey.review', 'survey.manage'] },
   ]},
   { title: 'Dashboards', items: [
     { label: 'P&L', link: '/dash/pnl', icon: 'trending_up', perms: ['earnings.view'] },
@@ -92,6 +98,7 @@ const NAV: NavGroup[] = [
         <button mat-button class="user" [matMenuTriggerFor]="userMenu"><span class="avatar">{{ initials() }}</span>{{ auth.user()?.username }}<mat-icon>expand_more</mat-icon></button>
         <mat-menu #userMenu="matMenu">
           <button mat-menu-item disabled><mat-icon>verified_user</mat-icon>{{ auth.permissions().size }} permissions · {{ auth.user()?.allCompanies ? 'all companies' : (auth.user()?.companyIds?.length ?? 0) + ' companies' }}</button>
+          <button mat-menu-item (click)="changePassword()"><mat-icon>password</mat-icon> Change password</button>
           <button mat-menu-item (click)="auth.logout()"><mat-icon>logout</mat-icon> Sign out</button>
         </mat-menu>
       </header>
@@ -128,6 +135,7 @@ const NAV: NavGroup[] = [
 })
 export class Shell {
   auth = inject(AuthService);
+  private dialogs = inject(Dialogs); private toast = inject(Toast);
   companies = inject(CompanyService);
   loading = inject(LoadingState);
   private router = inject(Router);
@@ -138,4 +146,14 @@ export class Shell {
   constructor() { this.companies.load(); }
   toggle(): void { this.collapsed.update(v => !v); localStorage.setItem('sl.nav', this.collapsed() ? 'collapsed' : 'open'); }
   lookup(): void { const s = this.q.replace(/[^0-9]/g, ''); if (s.length >= 18) { this.router.navigate(['/sim', s]); this.q = ''; } }
+
+  async changePassword(): Promise<void> {
+    const v = await this.dialogs.form({ title: 'Change my password', subtitle: 'At least 10 characters. Your other signed-in devices are signed out.', submit: 'Change', width: '420px', fields: [
+      { key: 'current', label: 'Current password', type: 'password', required: true, wide: true },
+      { key: 'next', label: 'New password', type: 'password', required: true, wide: true },
+      { key: 'again', label: 'New password again', type: 'password', required: true, wide: true }] });
+    if (!v) return;
+    if (v.next !== v.again) { this.toast.error({ detail: 'The two new passwords differ' }); return; }
+    this.auth.changePassword(v.current, v.next).subscribe({ next: () => this.toast.ok('Password changed'), error: e => this.toast.error(e) });
+  }
 }

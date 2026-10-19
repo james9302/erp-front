@@ -24,6 +24,15 @@ import { toProblem } from '../core/problem';
         <button mat-flat-button color="primary" class="full" [disabled]="busy()">Sign in</button>
       </form>
       <p class="hint">Locked after 5 failed attempts. No self-registration: users are created by someone holding user.manage.</p>
+      @if (!invite()) { <p class="hint"><a href="" (click)="$event.preventDefault(); invite.set(true)">First sign-in with an invitation token?</a></p> } @else {
+        <h2>Set your password</h2>
+        <form (ngSubmit)="redeem()">
+          <mat-form-field appearance="outline" class="full"><mat-label>Invitation token</mat-label><input matInput [(ngModel)]="token" name="t" required></mat-form-field>
+          <mat-form-field appearance="outline" class="full"><mat-label>New password (10+ characters)</mat-label><input matInput type="password" [(ngModel)]="newPassword" name="np" autocomplete="new-password" required minlength="10"></mat-form-field>
+          <button mat-flat-button color="primary" class="full" [disabled]="busy()">Set password and sign in</button>
+        </form>
+        <p class="hint">The token is shown once on the Users page to whoever invited you. Forgot your password? Ask someone with user.manage to reset it.</p>
+      }
     </mat-card>
   </div>`,
   styles: [`
@@ -40,9 +49,16 @@ export class LoginPage {
   private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  username = ''; password = ''; otp = '';
-  busy = signal(false); error = signal('');
+  username = ''; password = ''; otp = ''; token = ''; newPassword = '';
+  busy = signal(false); error = signal(''); invite = signal(false);
 
+  redeem(): void {
+    this.busy.set(true); this.error.set('');
+    this.auth.bootstrap(this.token.trim(), this.newPassword).subscribe({
+      next: () => this.router.navigateByUrl('/'),
+      error: e => { this.busy.set(false); const p = toProblem(e); this.error.set(p.detail); },
+    });
+  }
   submit(): void {
     this.busy.set(true); this.error.set('');
     this.auth.login(this.username, this.password, this.otp).subscribe({

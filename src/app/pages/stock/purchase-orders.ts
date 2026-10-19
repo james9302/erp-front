@@ -15,7 +15,7 @@ import { PoListRow, PoRequest, SupplierSummary } from '../../api/models';
   standalone: true, imports: [UI, PageHeader],
   template: `
   <app-page title="Purchase orders" subtitle="One order per company and supplier account. Approve it, then receive against it; the goods receipt shows progress per line.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="page = 0; load()"><mat-option [value]="''">Any</mat-option>@for (s of ['DRAFT','SUBMITTED','APPROVED','PARTIAL','RECEIVED','CLOSED','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; page = 0; load()"><mat-option [value]="''">Any</mat-option>@for (s of ['DRAFT','SUBMITTED','APPROVED','PARTIAL','RECEIVED','CLOSED','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
     @if (auth.has('po.create')) { <button mat-flat-button (click)="create()"><mat-icon>add_shopping_cart</mat-icon> New order</button> }
   </app-page>
   <div class="toolbar"><span class="grow"></span><span class="muted">{{ total() }} orders</span>

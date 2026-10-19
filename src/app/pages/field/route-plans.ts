@@ -17,7 +17,7 @@ import { PlanRow } from '../../api/models';
   standalone: true, imports: [UI, PageHeader],
   template: `
   <app-page title="Route plans" subtitle="A plan is a set of days: each day one rep or agent and an ordered list of shops to visit, optimised by the route service. Due shops come first; shops inside a no-go zone are never planned. Visits and hand-overs tick the stops off.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of ['DRAFT','PUBLISHED','DONE','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of ['DRAFT','PUBLISHED','DONE','CANCELLED']; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
     @if (auth.has('route.plan')) { <button mat-flat-button (click)="plan()"><mat-icon>add_road</mat-icon> New plan</button> }
   </app-page>
   <app-table [cols]="cols" [rows]="rows()" [server]="state" (pick)="router.navigate(['/route-plans', $event.id])" empty="No route plan yet. Build one from an area, or pick streets on the Streets page." />`,

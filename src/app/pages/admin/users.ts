@@ -25,7 +25,11 @@ import { PermissionResponse, RoleResponse, UserResponse } from '../../api/models
           @if (sel(); as u) {
             <div>
               <div class="row" style="align-items:center"><span class="tag" [class.ok]="u.status==='ACTIVE'" [class.bad]="u.status!=='ACTIVE'">{{ u.status }}</span></div>
-              <div class="muted" style="margin:6px 0 10px">{{ u.email || '' }} {{ u.mobile || '' }} · party {{ u.partyId || '—' }} · last login {{ u.lastLoginAt | when:true }}</div>
+              <div class="muted" style="margin:6px 0 10px">{{ u.name || '' }} {{ u.email || '' }} {{ u.mobile || '' }} · party {{ u.partyId || '—' }} @if (u.legacyId) { · old id {{ u.legacyId }} } · last login {{ u.lastLoginAt | when:true }}</div>
+              @if (u.invitationToken && auth.has('user.manage')) {
+                <div class="invite"><mat-icon>key</mat-icon><div><b>Invitation pending</b>: this user has no password yet. Give them this one-time token; they set their password with it (POST /api/v1/auth/bootstrap or the app's first-login screen).<br>
+                  <code>{{ u.invitationToken }}</code> <button mat-icon-button matTooltip="Copy token" (click)="copy(u.invitationToken!)"><mat-icon>content_copy</mat-icon></button></div></div>
+              }
               @if (auth.has('user.manage')) { <div class="row"><button mat-stroked-button (click)="doGrant(u)"><mat-icon>add</mat-icon> Grant role</button><button mat-button (click)="pwd(u)">Reset password</button><button mat-button (click)="toggle(u)">{{ u.status === 'ACTIVE' ? 'Disable' : 'Enable' }}</button></div> }
               <h2>Grants</h2>
               @for (g of u.roles || []; track g.grantId) { <div class="row" style="align-items:center; padding:4px 0"><span class="tag ok">{{ g.roleCode }}</span><span class="muted">{{ g.companyId ? companies.code(g.companyId) : 'all companies' }} · {{ g.grantedAt | when }}</span><span class="grow"></span>@if (auth.has('user.manage')) { <button mat-icon-button (click)="drop(u, g.grantId!)" matTooltip="Revoke"><mat-icon>close</mat-icon></button> }</div> } @empty { <div class="muted">No roles granted.</div> }
@@ -48,14 +52,14 @@ import { PermissionResponse, RoleResponse, UserResponse } from '../../api/models
       </app-drawer>
     </mat-tab>
   </mat-tab-group>`,
-  styles: [`.perms { display: grid; grid-template-columns: 1fr 1fr; }`],
+  styles: [`.perms { display: grid; grid-template-columns: 1fr 1fr; } .invite { display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; font-size: 13px; } .invite mat-icon { color: var(--warn); flex: none; } .invite code { font-size: 13px; user-select: all; }`],
 })
 export class UsersPage {
   auth = inject(AuthService); companies = inject(CompanyService);
   private api = inject(ApiClient); private toast = inject(Toast); private dialogs = inject(Dialogs);
   q = ''; users = signal<UserResponse[]>([]); sel = signal<UserResponse | null>(null); roles = signal<RoleResponse[]>([]); role = signal<RoleResponse | null>(null); perms = signal<PermissionResponse[]>([]); modules = signal<string[]>([]);
   rolePerms = new Set<string>();
-  userCols: Col[] = [{ key: 'username', label: 'User' }, { key: 'status', label: 'Status', type: 'tag' }, { key: 'email', label: 'Email' }, { key: 'partyId', label: 'Party' }, { key: 'lastLoginAt', label: 'Last login', type: 'datetime' }];
+  userCols: Col[] = [{ key: 'username', label: 'User' }, { key: 'name', label: 'Name' }, { key: 'status', label: 'Status', type: 'tag' }, { key: 'email', label: 'Email' }, { key: 'partyId', label: 'Party' }, { key: 'lastLoginAt', label: 'Last login', type: 'datetime' }];
   roleCols: Col[] = [{ key: 'code', label: 'Code' }, { key: 'name', label: 'Name' }, { key: 'system', label: 'System', type: 'bool' }];
   constructor() { this.loadUsers(); this.loadRoles(); this.api.call(permissions).subscribe(p => { this.perms.set(p); this.modules.set(Array.from(new Set(p.map(x => x.module!)))); }); }
   loadUsers(): void { this.api.call(list, { q: this.q || undefined, size: 50 }).subscribe(p => { this.users.set(p.items ?? []); const id = this.sel()?.id; if (id) this.sel.set(p.items?.find(u => u.id === id) ?? null); }); }
@@ -88,6 +92,7 @@ export class UsersPage {
     const v = await this.dialogs.form({ title: 'New role', submit: 'Create', width: '480px', fields: [{ key: 'code', label: 'Code', required: true }, { key: 'name', label: 'Name', required: true }, { key: 'description', label: 'Description', wide: true }] }); if (!v) return;
     this.api.call(create1, { body: { ...v, permissions: [] } }).subscribe({ next: () => { this.toast.ok('Role created'); this.loadRoles(); }, error: e => this.toast.error(e) });
   }
+  copy(token: string): void { navigator.clipboard?.writeText(token).then(() => this.toast.ok('Token copied'), () => this.toast.ok('Select the token and copy it')); }
   pickRole(r: RoleResponse): void { this.role.set(r); this.rolePerms = new Set(r.permissions ?? []); }
   togglePerm(code: string, on: boolean): void { if (on) this.rolePerms.add(code); else this.rolePerms.delete(code); }
   savePerms(r: RoleResponse): void { this.api.call(setPermissions, { id: r.id!, body: { permissions: Array.from(this.rolePerms), reason: 'set in UI' } }).subscribe({ next: () => { this.toast.ok('Saved'); this.loadRoles(); }, error: e => this.toast.error(e) }); }

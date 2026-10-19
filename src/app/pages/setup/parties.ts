@@ -21,7 +21,7 @@ const KINDS = ['REP', 'FIELD_AGENT', 'SHOP_AGENT', 'SHOP', 'SUPPLIER', 'CUSTOMER
   </app-page>
   <div class="toolbar">
     <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Search</mat-label><input matInput [(ngModel)]="q" (keyup.enter)="page = 0; load()"></mat-form-field>
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Kind</mat-label><mat-select [(ngModel)]="kind" (valueChange)="page = 0; load()"><mat-option [value]="''">Any</mat-option>@for (k of kinds; track k) { <mat-option [value]="k">{{ k }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Kind</mat-label><mat-select [ngModel]="kind" (ngModelChange)="kind = $event; page = 0; load()"><mat-option [value]="''">Any</mat-option>@for (k of kinds; track k) { <mat-option [value]="k">{{ k }}</mat-option> }</mat-select></mat-form-field>
     <mat-checkbox [(ngModel)]="activeOnly" (change)="load()">Active only</mat-checkbox>
     <span class="grow"></span><span class="muted">{{ total() }} parties</span>
     <button mat-icon-button [disabled]="page===0" (click)="page = page - 1; load()"><mat-icon>chevron_left</mat-icon></button><button mat-icon-button [disabled]="(page+1)*size >= total()" (click)="page = page + 1; load()"><mat-icon>chevron_right</mat-icon></button>
@@ -79,8 +79,8 @@ export class PartiesPage {
       { key: 'active', label: 'Active', type: 'checkbox' }];
   }
   async create(): Promise<void> {
-    const v = await this.dialogs.form({ title: 'New party', fields: this.fields(), initial: { kind: 'REP', active: true, parentPartyId: this.sel()?.id }, submit: 'Create' }); if (!v) return;
-    this.api.call(createParty, { body: v }).subscribe({ next: p => { this.toast.ok('Created'); this.load(); this.open(p); }, error: e => this.toast.error(e) });
+    const v = await this.dialogs.form({ title: 'New party', subtitle: 'The address, with a place search and map pin, is asked next.', fields: this.fields(), initial: { kind: 'REP', active: true, parentPartyId: this.sel()?.id }, submit: 'Create' }); if (!v) return;
+    this.api.call(createParty, { body: v }).subscribe({ next: p => { this.toast.ok('Created'); this.load(); this.open(p); if (p.kind !== 'COMPANY' && p.kind !== 'WAREHOUSE') this.address(p); }, error: e => this.toast.error(e) });
   }
   async edit(p: PartyResponse): Promise<void> {
     const v = await this.dialogs.form({ title: 'Edit ' + p.name, fields: this.fields(), initial: p }); if (!v) return;

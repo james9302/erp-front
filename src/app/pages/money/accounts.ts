@@ -17,7 +17,7 @@ import { RepAccountView } from '../../api/models';
   standalone: true, imports: [UI, KeyValuePipe, PageHeader],
   template: `
   <app-page title="Rep accounts" subtitle="Balance per rep and agent: + owed to them, − owed by them. Over the credit limit, new stock, items and loans are blocked without an override.">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Kind</mat-label><mat-select [(ngModel)]="kind" (valueChange)="state.refresh()"><mat-option [value]="''">All</mat-option><mat-option value="REP">REP</mat-option><mat-option value="FIELD_AGENT">FIELD_AGENT</mat-option><mat-option value="SHOP_AGENT">SHOP_AGENT</mat-option></mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Kind</mat-label><mat-select [ngModel]="kind" (ngModelChange)="kind = $event; state.refresh()"><mat-option [value]="''">All</mat-option><mat-option value="REP">REP</mat-option><mat-option value="FIELD_AGENT">FIELD_AGENT</mat-option><mat-option value="SHOP_AGENT">SHOP_AGENT</mat-option></mat-select></mat-form-field>
     <mat-checkbox [(ngModel)]="overOnly" (change)="state.refresh()">Over limit only</mat-checkbox>
     @if (auth.has('ledger.settings')) { <button mat-stroked-button (click)="editDefaults()"><mat-icon>tune</mat-icon> Defaults</button> }
   </app-page>

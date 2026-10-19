@@ -4,6 +4,7 @@
 export interface UserRequest {
   email?: string;
   mobile?: string;
+  name?: string;
   partyId?: number;
   password?: string;
   username: string;

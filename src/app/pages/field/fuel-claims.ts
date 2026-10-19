@@ -31,8 +31,8 @@ const FLAGS: Record<string, string> = {
     }
   </app-page>
   <div class="toolbar">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (valueChange)="state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of statuses; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
-    <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:240px"><mat-label>Rep / agent</mat-label><mat-select [(ngModel)]="rep" (valueChange)="state.refresh()"><mat-option [value]="null">Any</mat-option>@for (r of reps(); track r.id) { <mat-option [value]="r.id">{{ r.name }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Status</mat-label><mat-select [ngModel]="status" (ngModelChange)="status = $event; state.refresh()"><mat-option [value]="''">Any</mat-option>@for (s of statuses; track s) { <mat-option [value]="s">{{ s }}</mat-option> }</mat-select></mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:240px"><mat-label>Rep / agent</mat-label><mat-select [ngModel]="rep" (ngModelChange)="rep = $event; state.refresh()"><mat-option [value]="null">Any</mat-option>@for (r of reps(); track r.id) { <mat-option [value]="r.id">{{ r.name }}</mat-option> }</mat-select></mat-form-field>
     <mat-form-field appearance="outline" subscriptSizing="dynamic" style="width:130px"><mat-label>Month</mat-label><input matInput [(ngModel)]="month" placeholder="yyyy-MM" (keyup.enter)="state.refresh()" (change)="state.refresh()"></mat-form-field>
     <mat-checkbox [(ngModel)]="flagged" (change)="state.refresh()">Flagged only</mat-checkbox>
   </div>
