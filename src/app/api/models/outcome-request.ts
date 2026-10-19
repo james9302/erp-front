@@ -8,4 +8,5 @@ export interface OutcomeRequest {
   notes?: string;
   outcome?: string;
   status: string;
+  visitedAt?: string;
 }

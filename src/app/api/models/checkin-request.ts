@@ -3,6 +3,7 @@
 
 export interface CheckinRequest {
   accuracyM?: number;
+  idempotencyKey?: string;
   lat?: number;
   lng?: number;
   notes?: string;
